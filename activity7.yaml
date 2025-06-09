@@ -53,7 +53,7 @@ Resources:
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeSize: 20
+            VolumeSize: 40
             VolumeType: gp3
             DeleteOnTermination: true
       Tags:
@@ -132,6 +132,6 @@ Resources:
 
 Outputs:
   JenkinsURL:
-    Value: !Sub 'http://${JenkinsLoadBalancer.DNSName}'
+    Value: !Sub "http://${JenkinsLoadBalancer.DNSName}"
   InstanceId:
     Value: !Ref JenkinsInstance
