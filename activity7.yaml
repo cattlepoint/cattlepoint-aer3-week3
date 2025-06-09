@@ -1,0 +1,166 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  t2.medium Ubuntu 22.04 host with Jenkins, Docker, Node.js 20, Python 3,
+  AWS CLI v2, kubectl, eksctl, Java 17 and EC2 Instance Connect. Opens ports 22 & 8080.
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  PublicSubnetId:
+    Type: AWS::EC2::Subnet::Id
+  LatestUbuntuAmiId:
+    Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>"
+    Default: /aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id
+
+Resources:
+  AWSTemplateFormatVersion: '2010-09-09'
+  Description: >
+    t2.medium Ubuntu 22.04 host with Jenkins, Docker, Node.js 20, Python 3,
+    AWS CLI v2, kubectl, eksctl, Java 17 and EC2 Instance Connect. Opens ports 22 & 8080.
+
+  Parameters:
+    VpcId:
+      Type: AWS::EC2::VPC::Id
+    PublicSubnetId:
+      Type: AWS::EC2::Subnet::Id
+    LatestUbuntuAmiId:
+      Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+      Default: /aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id
+
+  Resources:
+    JenkinsSG:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: Allow SSH (22) and Jenkins (8080)
+        VpcId: !Ref VpcId
+        SecurityGroupIngress:
+          - IpProtocol: tcp
+            FromPort: 22
+            ToPort: 22
+            CidrIp: 0.0.0.0/0
+          - IpProtocol: tcp
+            FromPort: 8080
+            ToPort: 8080
+            CidrIp: 0.0.0.0/0
+
+    JenkinsInstance:
+      Type: AWS::EC2::Instance
+      Properties:
+        InstanceType: t2.medium
+        ImageId: !Ref LatestUbuntuAmiId
+        NetworkInterfaces:
+          - DeviceIndex: 0
+            SubnetId: !Ref PublicSubnetId
+            AssociatePublicIpAddress: true
+            GroupSet: [!Ref JenkinsSG]
+        BlockDeviceMappings:
+          - DeviceName: /dev/sda1
+            Ebs:
+              VolumeSize: 20      # GiB
+              VolumeType: gp3
+              DeleteOnTermination: true
+        Tags:
+          - Key: Name
+            Value: Jenkins
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            set -e
+
+            apt-get update
+            apt-get install -y \
+              ec2-instance-connect \
+              openjdk-17-jdk \
+              curl gnupg lsb-release unzip git docker.io \
+              python3 python3-pip ca-certificates apt-transport-https
+
+            # Jenkins
+            curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key \
+              | tee /usr/share/keyrings/jenkins-keyring.asc >/dev/null
+            echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" \
+              | tee /etc/apt/sources.list.d/jenkins.list
+
+            # Node.js 20 (LTS)
+            curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+
+            apt-get update
+            apt-get install -y jenkins nodejs
+
+            # AWS CLI v2
+            curl -o /tmp/awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+            unzip -q /tmp/awscliv2.zip -d /tmp && /tmp/aws/install
+
+            # kubectl (latest)
+            curl -Lo /usr/local/bin/kubectl \
+              https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
+            chmod +x /usr/local/bin/kubectl
+
+            # eksctl (latest)
+            curl -sL \
+              "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" \
+              | tar xz -C /usr/local/bin
+
+            # Docker permissions
+            usermod -aG docker jenkins
+            usermod -aG docker ubuntu
+
+            # Enable services
+            systemctl enable --now docker
+            systemctl enable --now jenkins
+            systemctl enable --now ec2-instance-connect
+
+  Outputs:
+    PublicDNS:
+      Value: !GetAtt JenkinsInstance.PublicDnsName
+    JenkinsURL:
+      Value: !Sub 'http://${JenkinsInstance.PublicDnsName}:8080'
+
+  JenkinsInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+
+      Tags:
+        - Key: Name
+
+
+          apt-get update
+          apt-get install -y \
+            ec2-instance-connect \
+            openjdk-17-jdk \
+            curl gnupg lsb-release unzip git docker.io \
+            python3 python3-pip ca-certificates apt-transport-https
+
+          # Jenkins
+          curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key \
+            | tee /usr/share/keyrings/jenkins-keyring.asc >/dev/null
+          echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" \
+            | tee /etc/apt/sources.list.d/jenkins.list
+
+          # Node.js 20 (LTS)
+          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+
+          apt-get update
+          apt-get install -y jenkins nodejs
+
+          # AWS CLI v2
+          curl -o /tmp/awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+          unzip -q /tmp/awscliv2.zip -d /tmp && /tmp/aws/install
+
+          # kubectl (latest)
+          curl -Lo /usr/local/bin/kubectl \
+            https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
+          chmod +x /usr/local/bin/kubectl
+
+          # eksctl (latest)
+          curl -sL \
+            "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" \
+            | tar xz -C /usr/local/bin
+
+          # Docker permissions
+          usermod -aG docker jenkins
+          usermod -aG docker ubuntu
+
+          # Enable services
+          systemctl enable --now docker
+          systemctl enable --now jenkins
+          systemctl enable --now ec2-instance-connect
