@@ -16,12 +16,17 @@ def default_vpc() -> str:
     if not v: sys.exit(f"No default VPC in {REGION}")
     return v[0]["VpcId"]
 
-def public_subnet(vpc_id: str) -> str:
-    for f in (["default-for-az","true"], ["map-public-ip-on-launch","true"]):
-        s = ec2.describe_subnets(Filters=[{"Name":"vpc-id","Values":[vpc_id]},
-                                          {"Name":f[0],"Values":[f[1]]}])["Subnets"]
-        if s: return sorted(s, key=lambda x: (x["AvailabilityZone"], x["SubnetId"]))[0]["SubnetId"]
-    sys.exit(f"No public subnet in {vpc_id}")
+def public_subnets(vpc_id: str, count: int = 2) -> list[str]:
+    filters = [
+        [{"Name": "vpc-id", "Values": [vpc_id]}, {"Name": "default-for-az", "Values": ["true"]}],
+        [{"Name": "vpc-id", "Values": [vpc_id]}, {"Name": "map-public-ip-on-launch", "Values": ["true"]}],
+    ]
+    for f in filters:
+        s = ec2.describe_subnets(Filters=f)["Subnets"]
+        if len(s) >= count:
+            s = sorted(s, key=lambda x: (x["AvailabilityZone"], x["SubnetId"]))[:count]
+            return [x["SubnetId"] for x in s]
+    sys.exit(f"Not enough public subnets in {vpc_id}")
 
 def stack(template: str, params: list[dict]) -> None:
     try:
@@ -48,12 +53,12 @@ def outputs() -> None:
     print(json.dumps({o["OutputKey"]: o["OutputValue"] for o in out}, indent=2))
 
 def main() -> None:
-    vpc_id    = default_vpc()
-    subnet_id = public_subnet(vpc_id)
+    vpc_id = default_vpc()
+    subnets = public_subnets(vpc_id)
     template  = pathlib.Path(TEMPLATE_PATH).read_text()
     params = [
-        {"ParameterKey":"VpcId",         "ParameterValue":vpc_id},
-        {"ParameterKey":"PublicSubnetId","ParameterValue":subnet_id},
+        {"ParameterKey":"VpcId",          "ParameterValue":vpc_id},
+        {"ParameterKey":"PublicSubnets",  "ParameterValue":",".join(subnets)},
     ]
     stack(template, params)
     outputs()
