@@ -108,13 +108,9 @@ Resources:
       Port: 8080
       Protocol: HTTP
       TargetType: instance
-
-  JenkinsTGAttachment:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroupAttachment
-    Properties:
-      TargetGroupArn: !Ref JenkinsTargetGroup
-      TargetId: !Ref JenkinsInstance
-      Port: 8080
+      Targets:
+        - Id: !Ref JenkinsInstance
+          Port: 8080
 
   JenkinsLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
