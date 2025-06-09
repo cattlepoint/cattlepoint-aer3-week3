@@ -1,0 +1,9 @@
+# Ignore everything by default
+*
+
+# But not these files...
+!*.yaml
+!*.py
+!*.txt
+!LICENSE
+!.gitignore
