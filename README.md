@@ -144,7 +144,7 @@ gh repo clone cattlepoint/cattlepoint-aer3-week3-extras-jenkins-ci
 cd cattlepoint-aer3-week3-extras-jenkins-ci
 ```
 
-* Deploy the template (this command deploys Jenkins and outputs the URL):
+* Deploy the template (this command creates a boto3 python environment, deploys Jenkins and outputs the URL):
 ```sh
 mkvirtualenv boto3
 pip install boto3
@@ -160,7 +160,7 @@ python3 activity7.py
 }
 ```
 
-### Access Jenkins and install the necessary plugins
+### Access Jenkins and configure an admin user
 * Open the Jenkins URL in your web browser (e.g., http://jenkin-......us-east-1.elb.amazonaws.com)
 * The first time you access Jenkins, it will prompt you to unlock it using an initial admin password.
 * To find the initial admin password, run the following command in your terminal to access the Jenkins instance via EC2 Instance Connect:
@@ -188,6 +188,8 @@ $ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 * Wait for the plugins to install. This may take a few minutes.
 * Once the plugins are installed, Jenkins will prompt you to create an admin user. Fill in the required information and click "Save and Continue."
 * Finally, Jenkins will ask you to configure the instance URL. You can leave it as the default. Click "Save and Finish" to complete the setup.
+
+### Install necessary plugins in Jenkins
 * You should now see the Jenkins dashboard.
 * Navigate to "Manage Jenkins" -> "Plugins" and install the following plugins:
   - Docker
@@ -195,5 +197,56 @@ $ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
   - AWS Credentials
   - Amazon Web Services SDK :: All
 * Once the plugins are installed, check the box "Restart Jenkins when installation is complete and no jobs are running"
+* Jenkins will restart automatically. Wait for it to come back online.
 
-### Configure the Jenkins pipelines
+### Disable the github throttling
+* Navigate to "Manage Jenkins" -> "System"
+* Scroll down to the " GitHub API usage" section.
+* In the "Github API usage rate limiting strategy?" dropdown, select the "Never check rate limit (NOT RECOMMENDED)" option.
+* Click "Save" to apply the changes.
+
+### We need to bootstrap the Jenkins instance with the AWS credentials
+* Deploy the cattlepoint-aer3-week3-extras-iam-users-pipeline/cfn-admin-user.yaml template
+```sh
+export AWS_PROFILE=eruser315
+workon boto3
+cd cattlepoint-aer3-week3-extras-iam-users-pipeline
+python3 cfn-admin-user.py
+```
+* Expected output (contents will vary):
+```sh
+% python3 cfn-admin-user.py
+Creating stack cfn-admin-user…
+Waiting for stack to reach CREATE_COMPLETE …
+UserName: cfn-admin-user
+AccessKeyId: AK...
+SecretAccessKey: Wg...
+```
+* Copy the AccessKeyId and SecretAccessKey values from the output. You will need them to configure Jenkins credentials.
+* From the Jenkins dashboard, navigate to "Manage Jenkins" -> " Credentials"
+* Click the dropdown option next to (global) under Stores scoped to Jenkins -> "Add Credentials"
+* In the "Kind" dropdown, select "AWS Credentials"
+  - ID: aws-jenkins-creds
+  - Access Key ID: (paste the AccessKeyId value you copied earlier)
+  - Secret Access Key: (paste the SecretAccessKey value you copied earlier)
+  - Click Create
+* The aws-jenkins-creds credential should now be listed
+
+### Configure the IAM user pipeline
+* From the Jenkins dashboard, click on "New Item."
+* pipeline name: create-iam-users-pipeline
+* pipeline type: Pipeline
+* Click "OK" to create the pipeline.
+* From the configuration page of the pipeline:
+  - Check the box for "Discard old builds"
+  - Check the box for "This project is parameterized"
+  - Credential type: AWS Credentials
+  - Default Value: select the AccessKeyId
+  - In the "Pipeline" section, select Definition "Pipeline script from SCM."
+  - SCM: Git
+  - Repository URL: https://github.com/cattlepoint/cattlepoint-aer3-week3-extras-iam-users-pipeline.git
+  - In the "Branches to build" subsection, set "Branch Specifier" to "*/main"
+  - Click "Save" to save the pipeline configuration.
+* From the pipeline page, click "Build with Parameters" to run the pipeline.
+* Accept the default parameters and click "Build."
+* Wait for the pipeline to complete. You can monitor the progress in the "Status" section -> "Last Build (#)" -> "Console Output"
