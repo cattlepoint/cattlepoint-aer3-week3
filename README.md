@@ -240,11 +240,72 @@ SecretAccessKey: Wg...
 * From the configuration page of the pipeline:
   - Check the box for "Discard old builds"
   - Check the box for "This project is parameterized"
+  - Choose Add Parameter dropdown -> set to "Credentials Parameter"
   - Credential type: AWS Credentials
   - Default Value: select the AccessKeyId
   - In the "Pipeline" section, select Definition "Pipeline script from SCM."
   - SCM: Git
   - Repository URL: https://github.com/cattlepoint/cattlepoint-aer3-week3-extras-iam-users-pipeline.git
+  - In the "Branches to build" subsection, set "Branch Specifier" to "*/main"
+  - Click "Save" to save the pipeline configuration.
+* From the pipeline page, click "Build with Parameters" to run the pipeline.
+* Accept the default parameters and click "Build."
+* Wait for the pipeline to complete. You can monitor the progress in the "Status" section -> "Last Build (#)" -> "Console Output"
+
+### Add the ecr-create credentials to Jenkins
+* From the Jenkins dashboard, navigate to "Manage Jenkins" -> " Credentials"
+* Click the dropdown option next to (global) under Stores scoped to Jenkins -> "Add Credentials"
+* In the "Kind" dropdown, select "AWS Credentials"
+  - ID: ecr-create
+  - Access Key ID: locate the AccessKeyId value from the output of the create-iam-users-pipeline
+  - Secret Access Key: locate the SecretAccessKey value from the output of the create-iam-users-pipeline
+  - Click Create
+* The ecr-create credential should now be listed
+
+### Configure the ECR creation pipeline
+* From the Jenkins dashboard, click on "New Item."
+* pipeline name: create-ecr-pipeline
+* pipeline type: Pipeline
+* Click "OK" to create the pipeline.
+* From the configuration page of the pipeline:
+  - Check the box for "Discard old builds"
+  - Check the box for "This project is parameterized"
+  - Choose Add Parameter dropdown -> set to "Credentials Parameter"
+  - Credential type: AWS Credentials
+  - Default Value: select the AccessKeyId for the ecr-create credential
+  - In the "Pipeline" section, select Definition "Pipeline script from SCM."
+  - SCM: Git
+  - Repository URL: https://github.com/cattlepoint/cattlepoint-aer3-week3-extras-ecr-pipeline.git
+  - In the "Branches to build" subsection, set "Branch Specifier" to "*/main"
+  - Click "Save" to save the pipeline configuration.
+* From the pipeline page, click "Build with Parameters" to run the pipeline.
+* Accept the default parameters and click "Build."
+* Wait for the pipeline to complete. You can monitor the progress in the "Status" section -> "Last Build (#)" -> "Console Output"
+
+### Add the eks-deploy credentials to Jenkins
+* From the Jenkins dashboard, navigate to "Manage Jenkins" -> " Credentials"
+* Click the dropdown option next to (global) under Stores scoped to Jenkins -> "Add Credentials"
+* In the "Kind" dropdown, select "AWS Credentials"
+  - ID: eks-deploy
+  - Access Key ID: locate the AccessKeyId value from the output of the create-iam-users-pipeline
+  - Secret Access Key: locate the SecretAccessKey value from the output of the create-iam-users-pipeline
+  - Click Create
+* The eks-deploy credential should now be listed
+
+### Configure the EKS creation pipeline
+* From the Jenkins dashboard, click on "New Item."
+* pipeline name: create-eks-pipeline
+* pipeline type: Pipeline
+* Click "OK" to create the pipeline.
+* From the configuration page of the pipeline:
+  - Check the box for "Discard old builds"
+  - Check the box for "This project is parameterized"
+  - Choose Add Parameter dropdown -> set to "Credentials Parameter"
+  - Credential type: AWS Credentials
+  - Default Value: select the AccessKeyId for the eks-deploy credential
+  - In the "Pipeline" section, select Definition "Pipeline script from SCM."
+  - SCM: Git
+  - Repository URL: https://github.com/cattlepoint/cattlepoint-aer3-week3-extras-eks-pipeline.git
   - In the "Branches to build" subsection, set "Branch Specifier" to "*/main"
   - Click "Save" to save the pipeline configuration.
 * From the pipeline page, click "Build with Parameters" to run the pipeline.
