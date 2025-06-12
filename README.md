@@ -118,6 +118,16 @@ remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
 branch.main.remote origin
 branch.main.merge refs/heads/main
 ```
+#### Clone the remaining repositories (if desired)
+* Clone the remaining repositories to your local project directory:
+```sh
+gh repo clone cattlepoint/cattlepoint-aer3-week3-extras-ecr-pipeline
+gh repo clone cattlepoint/cattlepoint-aer3-week3-extras-eks-pipeline
+gh repo clone cattlepoint/cattlepoint-aer3-week3-extras-iam-users-pipeline
+gh repo clone cattlepoint/cattlepoint-aer3-week3-extras-jenkins-ci
+gh repo clone cattlepoint/cattlepoint-aer3-week3-extras-jenkins-create-ecr
+gh repo clone cattlepoint/cattlepoint-aer3-week3-extras-jenkins-sample-pipeline
+```
 
 ## 10 points – Leverage a package manager to assist with your application’s prerequisites
 ### This section
@@ -126,7 +136,53 @@ branch.main.merge refs/heads/main
 ### This section
 
 ## 20 points – Use Jenkins to build your CI/CD Pipelines
-### This section
+### This section deploys Jenkins and configures it with the necessary pipelines
+#### Build Jenkins from template in AWS CloudFormation:
+* Verify AWS credentials are working:
+```sh
+export AWS_PROFILE=eruser315
+aws sts get-caller-identity
+```
+* Visually verify in output: arn:aws:iam::***:user/eruser315
+
+* Clone the Jenkins repository and open the directory:
+```sh
+gh repo clone cattlepoint/cattlepoint-aer3-week3-extras-jenkins-ci
+cd cattlepoint-aer3-week3-extras-jenkins-ci
+```
+
+* Deploy the template (this command deploys Jenkins and outputs the URL):
+```sh
+mkvirtualenv boto3
+pip install boto3
+python3 activity7.py
+```
+
+* Expected output (contents will vary):
+```sh
+% python3 activity7.py
+{
+  "InstanceId": "i-0b....",
+  "JenkinsURL": "http://jenkin-......us-east-1.elb.amazonaws.com"
+}
+```
+
+#### Access Jenkins and install the necessary plugins
+* Open the Jenkins URL in your web browser (e.g., http://jenkin-......us-east-1.elb.amazonaws.com)
+* The first time you access Jenkins, it will prompt you to unlock it using an initial admin password.
+* To find the initial admin password, run the following command in your terminal:
+```sh
+INSTANCE_ID=$(aws cloudformation describe-stack-resource \
+                --stack-name jenkins-ci \
+                --logical-resource-id JenkinsInstance \
+                --query 'StackResourceDetail.PhysicalResourceId' \
+                --output text)
+aws ec2-instance-connect ssh \
+  --os-user ubuntu \
+  --instance-id $INSTANCE_ID \
+  --command "cat /var/lib/jenkins/secrets/initialAdminPassword"
+```
+
 
 ## 30 points – Manage multiple versions of your application using Jenkins and Kubernetes
 ### This section
