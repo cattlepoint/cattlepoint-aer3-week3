@@ -372,3 +372,23 @@ SecretAccessKey: Wg...
 * From the pipeline page, click "Build with Parameters" to run the pipeline.
 * Accept the default parameters and click "Build."
 * Wait for the pipeline to complete. You can monitor the progress in the "Status" section -> "Last Build (#)" -> "Console Output"
+
+### Configure the app deployment pipeline
+* From the Jenkins dashboard, click on "New Item."
+* pipeline name: app-deployment-pipeline
+* pipeline type: Pipeline
+* Click "OK" to create the pipeline.
+* From the configuration page of the pipeline:
+  - Check the box for "Discard old builds"
+  - Check the box for "This project is parameterized"
+  - Choose Add Parameter dropdown -> set to "Credentials Parameter"
+  - Credential type: AWS Credentials
+  - Default Value: select the AccessKeyId for the eks-deploy credential
+  - In the "Pipeline" section, select Definition "Pipeline script from SCM."
+  - SCM: Git
+  - Repository URL: https://github.com/cattlepoint/cattlepoint-aer3-week3-extras-deploy-app-pipeline.git
+  - In the "Branches to build" subsection, set "Branch Specifier" to "*/master"
+  - Click "Save" to save the pipeline configuration.
+* From the pipeline page, click "Build with Parameters" to run the pipeline.
+* Accept the default parameters and click "Build."
+* Wait for the pipeline to complete. You can monitor the progress in the "Status" section -> "Last Build (#)" -> "Console Output"
