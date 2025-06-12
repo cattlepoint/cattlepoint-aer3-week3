@@ -76,7 +76,6 @@ eksctl version
 podman -v
 ```
 
-## 10 points – Configure Git to manage your source code for your application
 ### This section is to ensure you have git configured and working properly
 * Perform these steps in the MacOS terminal to configure git:
 ```sh
@@ -129,15 +128,9 @@ gh repo clone cattlepoint/cattlepoint-aer3-week3-extras-jenkins-create-ecr
 gh repo clone cattlepoint/cattlepoint-aer3-week3-extras-jenkins-sample-pipeline
 ```
 
-## 10 points – Leverage a package manager to assist with your application’s prerequisites
-### This section
+## Use Jenkins to build the CI/CD Pipelines to serve the app
 
-## 30 points – Utilize containerization and workflow automation to run your application
-### This section
-
-## 20 points – Use Jenkins to build your CI/CD Pipelines
-### This section deploys Jenkins and configures it with the necessary pipelines
-#### Build Jenkins from template in AWS CloudFormation:
+### Build Jenkins from template in AWS CloudFormation:
 * Verify AWS credentials are working:
 ```sh
 export AWS_PROFILE=eruser315
@@ -167,10 +160,10 @@ python3 activity7.py
 }
 ```
 
-#### Access Jenkins and install the necessary plugins
+### Access Jenkins and install the necessary plugins
 * Open the Jenkins URL in your web browser (e.g., http://jenkin-......us-east-1.elb.amazonaws.com)
 * The first time you access Jenkins, it will prompt you to unlock it using an initial admin password.
-* To find the initial admin password, run the following command in your terminal:
+* To find the initial admin password, run the following command in your terminal to access the Jenkins instance via EC2 Instance Connect:
 ```sh
 INSTANCE_ID=$(aws cloudformation describe-stack-resource \
                 --stack-name jenkins-ci \
@@ -179,10 +172,28 @@ INSTANCE_ID=$(aws cloudformation describe-stack-resource \
                 --output text)
 aws ec2-instance-connect ssh \
   --os-user ubuntu \
-  --instance-id $INSTANCE_ID \
-  --command "cat /var/lib/jenkins/secrets/initialAdminPassword"
+  --instance-id $INSTANCE_ID
 ```
+* Once connected, run the following command to retrieve the initial admin password:
+```sh
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+```
+* Expected output (contents will vary):
+```sh
+$ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+32b27cc19dc3477a977fa566d89d15fe
+```
+* Copy the password and paste it into the Jenkins unlock page in your web browser.
+* After unlocking Jenkins, it will prompt you to install plugins. Select the "Install suggested plugins" option.
+* Wait for the plugins to install. This may take a few minutes.
+* Once the plugins are installed, Jenkins will prompt you to create an admin user. Fill in the required information and click "Save and Continue."
+* Finally, Jenkins will ask you to configure the instance URL. You can leave it as the default. Click "Save and Finish" to complete the setup.
+* You should now see the Jenkins dashboard.
+* Navigate to "Manage Jenkins" -> "Plugins" and install the following plugins:
+  - Docker
+  - Docker Pipeline
+  - AWS Credentials
+  - Amazon Web Services SDK :: All
+* Once the plugins are installed, check the box "Restart Jenkins when installation is complete and no jobs are running"
 
-
-## 30 points – Manage multiple versions of your application using Jenkins and Kubernetes
-### This section
+### Configure the Jenkins pipelines
