@@ -196,6 +196,7 @@ $ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
   - Docker Pipeline
   - AWS Credentials
   - Amazon Web Services SDK :: All
+  - Kubernetes
 * Once the plugins are installed, check the box "Restart Jenkins when installation is complete and no jobs are running"
 * Jenkins will restart automatically. Wait for it to come back online.
 
@@ -307,6 +308,66 @@ SecretAccessKey: Wg...
   - SCM: Git
   - Repository URL: https://github.com/cattlepoint/cattlepoint-aer3-week3-extras-eks-pipeline.git
   - In the "Branches to build" subsection, set "Branch Specifier" to "*/main"
+  - Click "Save" to save the pipeline configuration.
+* From the pipeline page, click "Build with Parameters" to run the pipeline.
+* Accept the default parameters and click "Build."
+* Wait for the pipeline to complete. You can monitor the progress in the "Status" section -> "Last Build (#)" -> "Console Output"
+
+### Configure the database creation pipeline
+* From the Jenkins dashboard, click on "New Item."
+* pipeline name: create-database-pipeline
+* pipeline type: Pipeline
+* Click "OK" to create the pipeline.
+* From the configuration page of the pipeline:
+  - Check the box for "Discard old builds"
+  - Check the box for "This project is parameterized"
+  - Choose Add Parameter dropdown -> set to "Credentials Parameter"
+  - Credential type: AWS Credentials
+  - Default Value: select the AccessKeyId for the ecr-create credential
+  - In the "Pipeline" section, select Definition "Pipeline script from SCM."
+  - SCM: Git
+  - Repository URL: https://github.com/cattlepoint/cattlepoint-aer3-week3-extras-database-pipeline.git
+  - In the "Branches to build" subsection, set "Branch Specifier" to "*/master"
+  - Click "Save" to save the pipeline configuration.
+* From the pipeline page, click "Build with Parameters" to run the pipeline.
+* Accept the default parameters and click "Build."
+* Wait for the pipeline to complete. You can monitor the progress in the "Status" section -> "Last Build (#)" -> "Console Output"
+
+### Configure the frontend creation pipeline
+* From the Jenkins dashboard, click on "New Item."
+* pipeline name: create-frontend-pipeline
+* pipeline type: Pipeline
+* Click "OK" to create the pipeline.
+* From the configuration page of the pipeline:
+  - Check the box for "Discard old builds"
+  - Check the box for "This project is parameterized"
+  - Choose Add Parameter dropdown -> set to "Credentials Parameter"
+  - Credential type: AWS Credentials
+  - Default Value: select the AccessKeyId for the ecr-create credential
+  - In the "Pipeline" section, select Definition "Pipeline script from SCM."
+  - SCM: Git
+  - Repository URL: https://github.com/cattlepoint/cattlepoint-aer3-week3-extras-frontend-pipeline.git
+  - In the "Branches to build" subsection, set "Branch Specifier" to "*/master"
+  - Click "Save" to save the pipeline configuration.
+* From the pipeline page, click "Build with Parameters" to run the pipeline.
+* Accept the default parameters and click "Build."
+* Wait for the pipeline to complete. You can monitor the progress in the "Status" section -> "Last Build (#)" -> "Console Output"
+
+### Configure the backend creation pipeline
+* From the Jenkins dashboard, click on "New Item."
+* pipeline name: create-backend-pipeline
+* pipeline type: Pipeline
+* Click "OK" to create the pipeline.
+* From the configuration page of the pipeline:
+  - Check the box for "Discard old builds"
+  - Check the box for "This project is parameterized"
+  - Choose Add Parameter dropdown -> set to "Credentials Parameter"
+  - Credential type: AWS Credentials
+  - Default Value: select the AccessKeyId for the ecr-create credential
+  - In the "Pipeline" section, select Definition "Pipeline script from SCM."
+  - SCM: Git
+  - Repository URL: https://github.com/cattlepoint/cattlepoint-aer3-week3-extras-backend-pipeline.git
+  - In the "Branches to build" subsection, set "Branch Specifier" to "*/master"
   - Click "Save" to save the pipeline configuration.
 * From the pipeline page, click "Build with Parameters" to run the pipeline.
 * Accept the default parameters and click "Build."
